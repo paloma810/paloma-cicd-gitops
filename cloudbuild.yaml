@@ -34,7 +34,7 @@ steps:
         cd environments/$BRANCH_NAME
         terraform init
       else
-        for dir in environments/*/
+        for dir in environments/*/*/
         do 
           cd ${dir}   
           env=${dir%*/}
@@ -59,7 +59,7 @@ steps:
         cd environments/$BRANCH_NAME
         terraform plan
       else
-        for dir in environments/*/
+        for dir in environments/*/*/
         do 
           cd ${dir}   
           env=${dir%*/}
