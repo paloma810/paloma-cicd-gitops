@@ -211,6 +211,7 @@ resource "google_compute_route" "spoke_vpc_route_to_hub" {
 # 7. IPアドレスとPSC Endpointの作成
 # 　 ※ 現時点のTerraform仕様だと、ServiceDirectoryのリージョン指定ができず、us-centralでの作成となる
 resource "google_compute_global_address" "hub_vpc_private_ip_alloc" {
+  count    = var.is_create_gcp_instance
   provider = google
 
   name         = "${var.gcp_project_hub}siip01"
@@ -229,12 +230,13 @@ resource "google_service_networking_connection" "hub_vpc_psc_endpoint" {
 */
 
 resource "google_compute_global_forwarding_rule" "forwarding_rule_private_service_connect" {
+  count    = var.is_create_gcp_instance
   provider = google
 
   name                  = replace("${var.gcp_project_hub}fwd01", "-", "")
   target                = "vpc-sc"
   network               = google_compute_network.hub_vpc.self_link
-  ip_address            = google_compute_global_address.hub_vpc_private_ip_alloc.id
+  ip_address            = google_compute_global_address.hub_vpc_private_ip_alloc[0].id
   load_balancing_scheme = ""
 }
 
