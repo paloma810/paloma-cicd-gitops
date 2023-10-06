@@ -31,7 +31,7 @@ resource "google_compute_subnetwork" "gke_vpc_subnet" {
 
 # Worker Node用のサービスアカウント
 resource "google_service_account" "sa_gke_cluster" {
-  account_id   = "${var.project_name}-sa-gke-cluster"
+  account_id   = "sa-gke-cluster"
   display_name = "Service Account For Terraform To Make GKE Cluster"
 }
 
