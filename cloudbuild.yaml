@@ -37,6 +37,7 @@ steps:
       else
         for dir in environments/*/*/
         do 
+          pwd
           cd ${dir}   
           env=${dir%*/}
           env=${env#*/}
@@ -46,6 +47,7 @@ steps:
           echo "*************************************************"
           terraform init || exit 1
           cd ../../
+          pwd
         done
       fi 
 
