@@ -46,7 +46,7 @@ steps:
           echo "******* At environment: ${env} ********"
           echo "*************************************************"
           terraform init || exit 1
-          cd ../../
+          cd ../../../
           pwd
         done
       fi 
@@ -73,7 +73,7 @@ steps:
           echo "******* At environment: ${env} ********"
           echo "*************************************************"
           terraform plan || exit 1
-          cd ../../
+          cd ../../../
         done
       fi 
   secretEnv: ['TF_VAR_aws_access_key', 'TF_VAR_aws_secret_key']
