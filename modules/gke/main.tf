@@ -54,6 +54,7 @@ resource "google_container_cluster" "gke_cluster" {
   network    = google_compute_network.gke_vpc.self_link
   subnetwork = google_compute_subnetwork.gke_vpc_subnet.self_link
 
+  deletion_protection      = false
   remove_default_node_pool = true
   initial_node_count       = 1 #これ必要ある？
   addons_config {
