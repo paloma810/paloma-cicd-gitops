@@ -39,7 +39,7 @@ resource "google_service_account" "sa_gke_cluster" {
 resource "google_project_iam_member" "sa_gke_cluster_iam_policy" {
   project = var.project_id
   role    = "roles/artifactregistry.reader" # 最小権限の法則のもと、一旦Artifact Registry の読み取り権限のみ付与
-  member  = google_service_account.sa_gke_cluster.email
+  member  = "serviceAccount:${google_service_account.sa_gke_cluster.email}"
 }
 
 
