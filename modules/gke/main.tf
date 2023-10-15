@@ -50,9 +50,10 @@ resource "google_container_cluster" "gke_cluster" {
   name = "${var.project_name}-gke-cluster01"
   # Autopilotは有効化しない
   #enable_autopilot = true
-  location   = "asia-northeast1"
-  network    = google_compute_network.gke_vpc.self_link
-  subnetwork = google_compute_subnetwork.gke_vpc_subnet.self_link
+  location       = "asia-northeast1"
+  node_locations = ["asia-northeast1-a"]
+  network        = google_compute_network.gke_vpc.self_link
+  subnetwork     = google_compute_subnetwork.gke_vpc_subnet.self_link
 
   deletion_protection       = false
   remove_default_node_pool  = true
@@ -95,11 +96,11 @@ resource "google_container_cluster" "gke_cluster" {
 
 resource "google_container_node_pool" "gke_nodes" {
   name       = "${var.project_name}-gke-nodes"
-  location   = "asia-northeast1"
+  location   = "asia-northeast1-a"
   cluster    = google_container_cluster.gke_cluster.name
   node_count = 1
   /*
-  autoscaling {
+  autoscaling {gcloud container clusters get-credentials
     min_node_count = 1
     max_node_count = 2
   }
