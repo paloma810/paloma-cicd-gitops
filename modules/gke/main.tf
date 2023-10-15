@@ -67,8 +67,8 @@ resource "google_container_cluster" "gke_cluster" {
   }
 
   ip_allocation_policy {
-    cluster_ipv4_cidr_block  = var.gke_pods_ip_cidr
-    services_ipv4_cidr_block = var.gke_master_ip_cidr
+    cluster_secondary_range_name  = "${var.project_name}-tnvpc01-subnet01-secipr-pod"
+    services_secondary_range_name = "${var.project_name}-tnvpc01-subnet01-secipr-service"
   }
 
   # 限定公開クラスタの設定
