@@ -50,10 +50,9 @@ resource "google_container_cluster" "gke_cluster" {
   name = "${var.project_name}-gke-cluster01"
   # Autopilotは有効化しない
   #enable_autopilot = true
-  location       = "asia-northeast1-a"
-  node_locations = ["asia-northeast1-a"]
-  network        = google_compute_network.gke_vpc.self_link
-  subnetwork     = google_compute_subnetwork.gke_vpc_subnet.self_link
+  location   = "asia-northeast1-a"
+  network    = google_compute_network.gke_vpc.self_link
+  subnetwork = google_compute_subnetwork.gke_vpc_subnet.self_link
 
   deletion_protection       = false
   remove_default_node_pool  = true
