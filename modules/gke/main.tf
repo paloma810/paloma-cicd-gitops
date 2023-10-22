@@ -35,14 +35,6 @@ resource "google_service_account" "sa_gke_cluster" {
   display_name = "Service Account For Terraform To Make GKE Cluster"
 }
 
-# サービスアカウントへの権限付与
-resource "google_project_iam_member" "sa_gke_cluster_iam_policy" {
-  project = var.project_id
-  role    = "roles/artifactregistry.reader" # 最小権限の法則のもと、一旦Artifact Registry の読み取り権限のみ付与
-  member  = "serviceAccount:${google_service_account.sa_gke_cluster.email}"
-}
-
-
 # GKE クラスタ
 resource "google_container_cluster" "gke_cluster" {
   project = var.project_id
@@ -116,12 +108,4 @@ resource "google_container_node_pool" "gke_nodes" {
     ]
   }
 
-}
-
-# gke用 Artifact Registryリポジトリ
-resource "google_artifact_registry_repository" "gke-repo" {
-  location      = "asia-northeast1"
-  repository_id = "${var.project_name}-gke-repo"
-  description   = "container repository for GKE"
-  format        = "DOCKER"
 }

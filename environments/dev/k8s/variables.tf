@@ -10,8 +10,15 @@ variable "project_id" {
   type    = string
   default = "kh-paloma-m01-01"
 }
-
 variable "project_name" {
+  type    = string
+  default = "kh-paloma-m01-01"
+}
+variable "cicd_project_id" {
+  type    = string
+  default = "kh-paloma-m01-01"
+}
+variable "cicd_project_name" {
   type    = string
   default = "kh-paloma-m01-01"
 }
