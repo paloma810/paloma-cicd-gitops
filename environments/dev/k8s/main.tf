@@ -49,7 +49,7 @@ resource "google_artifact_registry_repository_iam_member" "terraform-image-iam" 
 // Create the GitHub connection
 resource "google_cloudbuildv2_connection" "conn-github" {
   project  = var.cicd_project_id
-  location = "glboal"
+  location = "global"
   name     = "${var.cicd_project_name}-conn-github"
 
   github_config {
