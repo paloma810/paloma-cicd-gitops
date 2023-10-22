@@ -49,7 +49,7 @@ resource "google_artifact_registry_repository_iam_member" "terraform-image-iam" 
 // Create the GitHub connection
 resource "google_cloudbuildv2_connection" "conn-github" {
   project  = var.cicd_project_id
-  location = "global"
+  location = "asia-northeast1"
   name     = "${var.cicd_project_name}-conn-github"
 
   github_config {
@@ -64,7 +64,7 @@ resource "google_cloudbuildv2_connection" "conn-github" {
 resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
   project  = var.cicd_project_id
   name     = "${var.cicd_project_name}-trigger-k8s"
-  location = "global"
+  location = "asia-northeast1"
   github {
     owner = "paoma810"
     name  = "paloma-cicd-gitops-k8s"
