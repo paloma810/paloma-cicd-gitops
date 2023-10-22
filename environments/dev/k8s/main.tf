@@ -20,7 +20,7 @@ module "gke" {
 resource "google_project_iam_member" "sa_gke_cluster_iam_policy" {
   project = var.cicd_project_id
   role    = "roles/artifactregistry.reader" # 最小権限の法則のもと、一旦Artifact Registry の読み取り権限のみ付与
-  member  = module.gke.sa_gke_cluster_email
+  member  = "serviceAccount:${module.gke.sa_gke_cluster_email}"
 }
 
 # gke用 Artifact Registryリポジトリ
