@@ -32,17 +32,12 @@ resource "google_artifact_registry_repository" "image_repo" {
   format        = "DOCKER"
 }
 
-data "google_service_account" "sa_build" {
-  project    = var.cicd_project_id
-  account_id = "181997179469@cloudbuild.gserviceaccount.com"
-}
-
 resource "google_artifact_registry_repository_iam_member" "terraform-image-iam" {
   project    = var.cicd_project_id
   location   = google_artifact_registry_repository.image_repo.location
   repository = google_artifact_registry_repository.image_repo.name
   role       = "roles/artifactregistry.admin"
-  member     = "serviceAccount:${data.google_service_account.sa_build.email}"
+  member     = "serviceAccount:181997179469@cloudbuild.gserviceaccount.com"
 }
 
 # Cloud Build
@@ -84,5 +79,5 @@ resource "google_project_iam_member" "sa_build_project_iam" {
   for_each = toset(local.roles_sa_build)
   project  = var.cicd_project_id
   role     = each.value
-  member   = data.google_service_account.sa_build.email
+  member   = "serviceAccount:181997179469@cloudbuild.gserviceaccount.com"
 }
