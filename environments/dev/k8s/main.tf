@@ -45,6 +45,21 @@ resource "google_artifact_registry_repository_iam_member" "terraform-image-iam" 
 }
 */
 
+
+// Create the GitHub connection
+resource "google_cloudbuildv2_connection" "conn-github" {
+  project  = var.cicd_project_id
+  location = "glboal"
+  name     = "${var.cicd_project_name}-conn-github"
+
+  github_config {
+    app_installation_id = 40467804
+    authorizer_credential {
+      oauth_token_secret_version = "projects/181997179469/secrets/paloma-cicd-secret-github/versions/1"
+    }
+  }
+}
+
 # Cloud Build
 resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
   project  = var.cicd_project_id
