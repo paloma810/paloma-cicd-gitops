@@ -33,12 +33,31 @@ resource "google_artifact_registry_repository" "image_repo" {
   format        = "DOCKER"
 }
 
+// google_project_iam_member.sa_build_project_iam にてPJレベルで
+// artifact registryに対して管理者権限を付与済
+/*
 resource "google_artifact_registry_repository_iam_member" "terraform-image-iam" {
   project    = var.cicd_project_id
   location   = google_artifact_registry_repository.image_repo.location
   repository = google_artifact_registry_repository.image_repo.name
   role       = "roles/artifactregistry.admin"
   member     = "serviceAccount:181997179469@cloudbuild.gserviceaccount.com"
+}
+*/
+
+
+// Create the GitHub connection
+resource "google_cloudbuildv2_connection" "conn-github" {
+  project  = var.cicd_project_id
+  location = "glboal"
+  name     = "${var.cicd_project_name}-conn-github"
+
+  github_config {
+    app_installation_id = 40467804
+    authorizer_credential {
+      oauth_token_secret_version = "projects/181997179469/secrets/paloma-cicd-secret-github/versions/1"
+    }
+  }
 }
 
 # Cloud Build
