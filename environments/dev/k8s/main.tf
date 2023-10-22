@@ -33,6 +33,9 @@ resource "google_artifact_registry_repository" "image_repo" {
   format        = "DOCKER"
 }
 
+// google_project_iam_member.sa_build_project_iam にてPJレベルで
+// artifact registryに対して管理者権限を付与済
+/*
 resource "google_artifact_registry_repository_iam_member" "terraform-image-iam" {
   project    = var.cicd_project_id
   location   = google_artifact_registry_repository.image_repo.location
@@ -40,6 +43,7 @@ resource "google_artifact_registry_repository_iam_member" "terraform-image-iam" 
   role       = "roles/artifactregistry.admin"
   member     = "serviceAccount:181997179469@cloudbuild.gserviceaccount.com"
 }
+*/
 
 # Cloud Build
 resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
