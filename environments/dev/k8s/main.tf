@@ -55,9 +55,17 @@ resource "google_cloudbuildv2_connection" "conn-github" {
   github_config {
     app_installation_id = 40467804
     authorizer_credential {
-      oauth_token_secret_version = "projects/181997179469/secrets/paloma-cicd-secret-github/versions/1"
+      oauth_token_secret_version = "projects/181997179469/secrets/paloma-cicd-secret-github/versions/2"
     }
   }
+}
+
+resource "google_cloudbuildv2_repository" "repo-github" {
+  project           = var.cicd_project_id
+  location          = "asia-northeast1"
+  name              = "paloma-cicd-gitops-gke"
+  parent_connection = google_cloudbuildv2_connection.conn-github.name
+  remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke"
 }
 
 # Cloud Build
