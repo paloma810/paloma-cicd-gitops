@@ -80,7 +80,7 @@ resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
     }
   }
 
-  filename = ""
+  filename = "cloudbuild.yaml"
 }
 locals {
   // ref) default value of google cloud module "secure-ci"
