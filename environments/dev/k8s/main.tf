@@ -73,12 +73,10 @@ resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
   project  = var.cicd_project_id
   name     = "${var.cicd_project_name}-trigger-k8s"
   location = "asia-northeast1"
-  github {
-    owner = "paoma810"
-    name  = "paloma-cicd-gitops-k8s"
+  repository_event_config {
+    repository = google_cloudbuildv2_repository.repo-github.id
     push {
-      branch       = ".*"
-      invert_regex = false
+      branch = ".*"
     }
   }
 
