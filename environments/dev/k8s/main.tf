@@ -65,7 +65,7 @@ resource "google_cloudbuildv2_repository" "repo-github" {
   location          = "asia-northeast1"
   name              = "paloma-cicd-gitops-gke"
   parent_connection = google_cloudbuildv2_connection.conn-github.name
-  remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke"
+  remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke.git"
 }
 
 # Cloud Build
