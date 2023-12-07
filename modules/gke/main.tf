@@ -49,7 +49,7 @@ resource "google_container_cluster" "gke_cluster" {
   deletion_protection       = false
   remove_default_node_pool  = true
   initial_node_count        = 1 #これ必要ある？
-  default_max_pods_per_node = 10
+  default_max_pods_per_node = 100
   addons_config {
     horizontal_pod_autoscaling {
       disabled = true
