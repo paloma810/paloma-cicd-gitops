@@ -100,6 +100,7 @@ resource "google_container_node_pool" "gke_nodes" {
   node_config {
     preemptible  = true
     machine_type = "e2-small"
+    disk_size_gb = 30
 
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
     service_account = google_service_account.sa_gke_cluster.email
