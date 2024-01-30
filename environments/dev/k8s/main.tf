@@ -11,9 +11,9 @@ module "gke" {
   // 最小範囲ののCIDRが変わるので注意
   // https://cloud.google.com/kubernetes-engine/docs/concepts/alias-ips?hl=ja#range_management
 
-  gke_master_ip_cidr   = "192.168.100.0/28"
-  gke_pods_ip_cidr     = "192.168.101.0/24"
-  gke_services_ip_cidr = "192.168.102.0/24"
+  gke_master_ip_cidr   = "192.168.16.0/28"
+  gke_pods_ip_cidr     = "192.168.32.0/20"
+  gke_services_ip_cidr = "192.168.48.0/20"
 
 }
 
