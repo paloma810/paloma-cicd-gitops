@@ -49,7 +49,7 @@ resource "google_container_cluster" "gke_cluster" {
   deletion_protection       = false
   remove_default_node_pool  = true
   initial_node_count        = 1 #これ必要ある？
-  default_max_pods_per_node = 80
+  default_max_pods_per_node = 100
   addons_config {
     horizontal_pod_autoscaling {
       disabled = true
@@ -98,7 +98,7 @@ resource "google_container_node_pool" "gke_nodes" {
 
   node_config {
     preemptible  = true
-    machine_type = "e2-medium"
+    machine_type = "n2-standard-4"
     disk_size_gb = 30
 
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
