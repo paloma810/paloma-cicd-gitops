@@ -84,12 +84,11 @@ resource "google_container_cluster" "gke_cluster" {
     }
   }
 }
-
 resource "google_container_node_pool" "gke_nodes" {
   name       = "${var.project_name}-gke-nodes01"
   location   = "asia-northeast1-a"
   cluster    = google_container_cluster.gke_cluster.name
-  node_count = 1
+  node_count = 2
   /*
   autoscaling {gcloud container clusters get-credentials
     min_node_count = 1
