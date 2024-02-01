@@ -88,7 +88,7 @@ resource "google_container_node_pool" "gke_nodes" {
   name       = "${var.project_name}-gke-nodes01"
   location   = "asia-northeast1-a"
   cluster    = google_container_cluster.gke_cluster.name
-  node_count = 2
+  node_count = 1
   /*
   autoscaling {gcloud container clusters get-credentials
     min_node_count = 1
@@ -98,7 +98,7 @@ resource "google_container_node_pool" "gke_nodes" {
 
   node_config {
     preemptible  = true
-    machine_type = "e2-small"
+    machine_type = "e2-medium"
     disk_size_gb = 30
 
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
