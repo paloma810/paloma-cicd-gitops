@@ -84,7 +84,6 @@ resource "google_container_cluster" "gke_cluster" {
     }
   }
 }
-
 resource "google_container_node_pool" "gke_nodes" {
   name       = "${var.project_name}-gke-nodes01"
   location   = "asia-northeast1-a"
