@@ -84,11 +84,37 @@ resource "google_container_cluster" "gke_cluster" {
     }
   }
 }
-resource "google_container_node_pool" "gke_nodes" {
+resource "google_container_node_pool" "gke_node_pool01" {
   name       = "${var.project_name}-gke-nodes01"
   location   = "asia-northeast1-a"
   cluster    = google_container_cluster.gke_cluster.name
-  node_count = 2
+  node_count = 1
+  /*
+  autoscaling {gcloud container clusters get-credentials
+    min_node_count = 1
+    max_node_count = 2
+  }
+  */
+
+  node_config {
+    preemptible  = true
+    machine_type = "e2-small"
+    disk_size_gb = 20
+
+    # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
+    service_account = google_service_account.sa_gke_cluster.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+  }
+
+}
+
+resource "google_container_node_pool" "gke_node_pool02" {
+  name       = "${var.project_name}-gke-nodes02"
+  location   = "asia-northeast1-b"
+  cluster    = google_container_cluster.gke_cluster.name
+  node_count = 1
   /*
   autoscaling {gcloud container clusters get-credentials
     min_node_count = 1
