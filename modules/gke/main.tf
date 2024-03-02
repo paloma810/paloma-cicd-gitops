@@ -112,7 +112,7 @@ resource "google_container_node_pool" "gke_node_pool01" {
 
 resource "google_container_node_pool" "gke_node_pool02" {
   name       = "${var.project_name}-gke-nodes02"
-  location   = "asia-northeast1-b"
+  location   = "asia-northeast1-a"
   cluster    = google_container_cluster.gke_cluster.name
   node_count = 1
   /*
