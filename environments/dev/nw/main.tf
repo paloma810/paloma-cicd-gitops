@@ -22,7 +22,7 @@ resource "google_compute_subnetwork" "subnet01_nwtest" {
 # Serverless VPC Access Connector設定
 resource "google_vpc_access_connector" "svac01_nwtest" {
   provider      = google
-  name          = "${var.project_name}svac01nwtest"
+  name          = replace("${var.project_name}svac01nwtest", "-", "")
   ip_cidr_range = "10.38.0.0/28"
   network       = google_compute_network.vpc01_nwtest.id
 }
