@@ -48,6 +48,7 @@ steps:
           terraform init || exit 1
           cd ../../../
         done
+      fi
 
 # [START tf-plan]
 - id: 'tf plan'
