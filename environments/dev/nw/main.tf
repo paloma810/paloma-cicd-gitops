@@ -19,13 +19,16 @@ resource "google_compute_subnetwork" "subnet01_nwtest" {
   private_ip_google_access = true
 }
 
+
 # Serverless VPC Access Connector設定
+/*
 resource "google_vpc_access_connector" "svac01_nwtest" {
   provider      = google
   name          = replace("${var.project_name}svac01nwtest", "-", "")
   ip_cidr_range = "10.38.0.0/28"
   network       = google_compute_network.vpc01_nwtest.id
 }
+*/
 
 # テスト用踏み台GCEインスタンスは手動で作成するため一旦対象外
 
