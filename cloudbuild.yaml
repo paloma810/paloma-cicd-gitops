@@ -49,12 +49,12 @@ steps:
   - '-c'
   - | 
       ls -R
-      TARGET=$(echo $BRANCH_NAME | sed -e "s/.*\///g")
       if [ -d "environments/$BRANCH_NAME/" ]; then
         cd environments/$BRANCH_NAME
         terraform plan
       else
-        for dir in environments/*/$TARGET/
+        target=$(echo $BRANCH_NAME | sed -e "s/.*\///g")
+        for dir in environments/*/$target/
         do 
           cd ${dir}   
           env=${dir%*/}
