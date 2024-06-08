@@ -49,14 +49,23 @@ steps:
   - '-c'
   - | 
       ls -R
+      TARGET=$(echo $BRANCH_NAME | sed -e "s/.*\///g")
       if [ -d "environments/$BRANCH_NAME/" ]; then
         cd environments/$BRANCH_NAME
         terraform plan
       else
-        echo ""
-        echo "*************** TERRAFORM PLAN *****************************************"
-        echo "******* No folder match the branch: environments/${BRANCH_NAME} ********"
-        echo "************************************************************************"        
+        for dir in environments/*/$TARGET/
+        do 
+          cd ${dir}   
+          env=${dir%*/}
+          env=${env#*/}  
+          echo ""
+          echo "*************** TERRAFOM PLAN ******************"
+          echo "******* At environment: ${env} ********"
+          echo "*************************************************"
+          terraform plan || exit 1
+          cd ../../../
+        done
       fi 
   secretEnv: ['TF_VAR_aws_access_key', 'TF_VAR_aws_secret_key']
 # [END tf-plan]
