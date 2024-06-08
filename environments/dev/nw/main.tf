@@ -1,5 +1,6 @@
 # VPCネットワーク設定
 resource "google_compute_network" "vpc01_nwtest" {
+  project                         = var.project_id
   name                            = "${var.project_name}-vpc01-nwtest"
   description                     = "This is a VPC for NW Test"
   auto_create_subnetworks         = false
@@ -10,6 +11,7 @@ resource "google_compute_network" "vpc01_nwtest" {
 
 # サブネット設定
 resource "google_compute_subnetwork" "subnet01_nwtest" {
+  project                  = var.project_id
   name                     = "${var.project_name}-subnet01-nwtest"
   description              = "This is a Subnet on Spoke VPC"
   network                  = google_compute_network.vpc01_nwtest.self_link
@@ -19,6 +21,7 @@ resource "google_compute_subnetwork" "subnet01_nwtest" {
 
 # Serverless VPC Access Connector設定
 resource "google_vpc_access_connector" "svac01_nwtest" {
+  project       = var.project_id
   name          = "${var.project_name}-svac01-nwtest"
   ip_cidr_range = "10.38.0.0/28"
   network       = google_compute_network.vpc01_nwtest.id
@@ -60,6 +63,7 @@ resource "google_sql_database" "db01_nwtest_db" {
 }
 
 resource "google_compute_global_address" "private_ip01_nwtest" {
+  project       = var.project_id
   name          = "private-ip-alloc"
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
