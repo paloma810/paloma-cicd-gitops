@@ -6,7 +6,7 @@ resource "google_compute_network" "vpc01_nwtest" {
   auto_create_subnetworks         = false
   routing_mode                    = "GLOBAL"
   mtu                             = 1460
-  delete_default_routes_on_create = true
+  delete_default_routes_on_create = false
 }
 
 # サブネット設定
