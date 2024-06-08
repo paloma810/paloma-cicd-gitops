@@ -35,11 +35,19 @@ steps:
         cd environments/$BRANCH_NAME
         terraform init
       else
-        echo ""
-        echo "*************** TERRAFORM INIT *****************************************"
-        echo "******* No folder match the branch: environments/${BRANCH_NAME} ********"
-        echo "************************************************************************"        
-      fi 
+        target=$(echo $BRANCH_NAME | sed -e "s/.*\///g")
+        for dir in environments/*/$target/
+        do 
+          cd ${dir}   
+          env=${dir%*/}
+          env=${env#*/}
+          echo ""
+          echo "*************** TERRAFORM INIT ******************"
+          echo "******* At environment: ${env} ********"
+          echo "*************************************************"
+          terraform init || exit 1
+          cd ../../../
+        done
 
 # [START tf-plan]
 - id: 'tf plan'
