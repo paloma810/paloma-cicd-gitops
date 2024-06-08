@@ -19,6 +19,33 @@ resource "google_compute_subnetwork" "subnet01_nwtest" {
   private_ip_google_access = true
 }
 
+# 全てのingressトラフィックを許可するファイアウォールルールの作成
+resource "google_compute_firewall" "fw01_nwtest_allow_all_ingress" {
+  name    = "${var.project_name}-fw01-nwtest-allow-all-ingress"
+  network = google_compute_network.vpc01_nwtest.self_link
+
+  allow {
+    protocol = "all"
+    ports    = ["0-65535"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  direction     = "INGRESS"
+}
+
+# 全てのegressトラフィックを許可するファイアウォールルールの作成
+resource "google_compute_firewall" "fw02_nwtest_allow_all_egress" {
+  name    = "${var.project_name}-fw02-nwtest-allow-all-egress"
+  network = google_compute_network.vpc01_nwtest.self_link
+
+  allow {
+    protocol = "all"
+    ports    = ["0-65535"]
+  }
+
+  destination_ranges = ["0.0.0.0/0"]
+  direction          = "EGRESS"
+}
 
 # Serverless VPC Access Connector設定
 /*
