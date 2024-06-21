@@ -30,23 +30,33 @@ steps:
   args: 
   - '-c'
   - |
+      echo "********** DIRECTORY **********"
+      pwd
+      echo "********** CONTENTS ***********"
       ls -R
+      # if branch name is $env/$BRANCH (is exists as directory)
       if [ -d "environments/$BRANCH_NAME/" ]; then
         cd environments/$BRANCH_NAME
+        echo "*************** TERRAFORM INIT ******************"
+        echo "******* At environment: ${env} ********"
+        echo "*************************************************"
         terraform init
+      # if branch name is fix/$BRANCH (is not exists as directory)
       else
         target=$(echo $BRANCH_NAME | sed -e "s/.*\///g")
         for dir in environments/*/$target/
-        do 
-          cd ${dir}   
-          env=${dir%*/}
-          env=${env#*/}
-          echo ""
-          echo "*************** TERRAFORM INIT ******************"
-          echo "******* At environment: ${env} ********"
-          echo "*************************************************"
-          terraform init || exit 1
-          cd ../../../
+        do
+          if [ -d $dir ]; then
+            cd ${dir}   
+            env=${dir%*/}
+            env=${env#*/}
+            echo ""
+            echo "*************** TERRAFORM INIT ******************"
+            echo "******* At environment: ${env} (poc) ********"
+            echo "*************************************************"
+            terraform init || exit 1
+            cd ../../../
+          fi
         done
       fi
 
@@ -57,23 +67,33 @@ steps:
   args: 
   - '-c'
   - | 
+      echo "********** DIRECTORY **********"
+      pwd
+      echo "********** CONTENTS ***********"
       ls -R
+      # if branch name is $env/$BRANCH (is exists as directory)
       if [ -d "environments/$BRANCH_NAME/" ]; then
         cd environments/$BRANCH_NAME
+        echo "*************** TERRAFOM PLAN ******************"
+        echo "******* At environment: ${env} ********"
+        echo "*************************************************"
         terraform plan
+      # if branch name is fix/$BRANCH (is not exists as directory)
       else
         target=$(echo $BRANCH_NAME | sed -e "s/.*\///g")
         for dir in environments/*/$target/
         do 
-          cd ${dir}   
-          env=${dir%*/}
-          env=${env#*/}  
-          echo ""
-          echo "*************** TERRAFOM PLAN ******************"
-          echo "******* At environment: ${env} ********"
-          echo "*************************************************"
-          terraform plan || exit 1
-          cd ../../../
+          if [ -d $dir ]; then
+            cd ${dir}   
+            env=${dir%*/}
+            env=${env#*/}  
+            echo ""
+            echo "*************** TERRAFOM PLAN ******************"
+            echo "******* At environment: ${env} ********"
+            echo "*************************************************"
+            terraform plan || exit 1
+            cd ../../../
+          fi
         done
       fi 
   secretEnv: ['TF_VAR_aws_access_key', 'TF_VAR_aws_secret_key']
