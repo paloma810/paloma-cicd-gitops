@@ -107,3 +107,4 @@ resource "google_service_networking_connection" "service_nw_conn01_nwtest" {
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.private_ip01_nwtest.name]
 }
+
