@@ -107,3 +107,5 @@ resource "google_project_iam_member" "sa_build_project_iam" {
   role     = each.value
   member   = "serviceAccount:181997179469@cloudbuild.gserviceaccount.com"
 }
+
+
