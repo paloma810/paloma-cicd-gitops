@@ -68,6 +68,14 @@ resource "google_cloudbuildv2_repository" "repo-github" {
   remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke.git"
 }
 
+resource "google_cloudbuildv2_repository" "repo-github-gke-backend" {
+  project           = var.cicd_project_id
+  location          = "asia-northeast1"
+  name              = "paloma-cicd-gitops-gke-backend"
+  parent_connection = google_cloudbuildv2_connection.conn-github.name
+  remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke-backend.git"
+}
+
 # Cloud Build
 resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
   project  = var.cicd_project_id
@@ -75,6 +83,19 @@ resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
   location = "asia-northeast1"
   repository_event_config {
     repository = google_cloudbuildv2_repository.repo-github.id
+    push {
+      branch = ".*"
+    }
+  }
+
+  filename = "cloudbuild.yaml"
+}
+resource "google_cloudbuild_trigger" "gke_app_build_trigger_gke_backend" {
+  project  = var.cicd_project_id
+  name     = "${var.cicd_project_name}-trigger-gke-backend"
+  location = "asia-northeast1"
+  repository_event_config {
+    repository = google_cloudbuildv2_repository.repo-github-gke-backend.id
     push {
       branch = ".*"
     }
