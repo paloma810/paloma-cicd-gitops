@@ -62,6 +62,7 @@ resource "google_cloudbuildv2_connection" "conn-github" {
 
 resource "google_cloudbuildv2_repository" "repo-github" {
   project           = var.cicd_project_id
+  location          = "us-central1"
   name              = "paloma-cicd-gitops-gke"
   parent_connection = google_cloudbuildv2_connection.conn-github.name
   remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke.git"
@@ -69,6 +70,7 @@ resource "google_cloudbuildv2_repository" "repo-github" {
 
 resource "google_cloudbuildv2_repository" "repo-github-gke-backend" {
   project           = var.cicd_project_id
+  location          = "us-central1"
   name              = "paloma-cicd-gitops-gke-backend"
   parent_connection = google_cloudbuildv2_connection.conn-github.name
   remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke-backend.git"
@@ -76,8 +78,9 @@ resource "google_cloudbuildv2_repository" "repo-github-gke-backend" {
 
 # Cloud Build
 resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
-  project = var.cicd_project_id
-  name    = "${var.cicd_project_name}-trigger-k8s"
+  project  = var.cicd_project_id
+  location = "us-central1"
+  name     = "${var.cicd_project_name}-trigger-k8s"
   repository_event_config {
     repository = google_cloudbuildv2_repository.repo-github.id
     push {
@@ -88,8 +91,9 @@ resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
   filename = "cloudbuild.yaml"
 }
 resource "google_cloudbuild_trigger" "gke_app_build_trigger_gke_backend" {
-  project = var.cicd_project_id
-  name    = "${var.cicd_project_name}-trigger-gke-backend"
+  project  = var.cicd_project_id
+  location = "us-central1"
+  name     = "${var.cicd_project_name}-trigger-gke-backend"
   repository_event_config {
     repository = google_cloudbuildv2_repository.repo-github-gke-backend.id
     push {
