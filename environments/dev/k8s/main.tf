@@ -93,7 +93,7 @@ resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
 resource "google_cloudbuild_trigger" "gke_app_build_trigger_gke_backend" {
   project  = var.cicd_project_id
   name     = "${var.cicd_project_name}-trigger-gke-backend"
-  location = "asia-northeast1"
+  location = "global"
   repository_event_config {
     repository = google_cloudbuildv2_repository.repo-github-gke-backend.id
     push {
