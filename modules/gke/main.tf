@@ -81,6 +81,10 @@ resource "google_container_cluster" "gke_cluster" {
     cidr_blocks {
       cidr_block = google_compute_subnetwork.gke_vpc_subnet.ip_cidr_range # ノードと踏み台が作られるサブネットからのアクセスを許可
     }
+    cidr_blocks {
+      display_name = "localip"
+      cidr_block   = "60.138.39.189/32"
+    }
   }
 }
 resource "google_container_node_pool" "gke_node_pool01" {
