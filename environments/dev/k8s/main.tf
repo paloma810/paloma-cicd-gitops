@@ -119,6 +119,34 @@ resource "google_cloudbuild_trigger" "gke_app_build_trigger_gke_backend" {
 
   filename = "cloudbuild.yaml"
 }
+
+resource "google_cloudbuild_trigger" "gke_app_build_trigger_gke_frontend" {
+  project  = var.cicd_project_id
+  location = "us-central1"
+  name     = "${var.cicd_project_name}-trigger-gke-frontend"
+  repository_event_config {
+    repository = google_cloudbuildv2_repository.repo-github-gke-frontend.id
+    push {
+      branch = ".*"
+    }
+  }
+
+  filename = "cloudbuild.yaml"
+}
+
+resource "google_cloudbuild_trigger" "gke_app_build_trigger_gke_db" {
+  project  = var.cicd_project_id
+  location = "us-central1"
+  name     = "${var.cicd_project_name}-trigger-gke-db"
+  repository_event_config {
+    repository = google_cloudbuildv2_repository.repo-github-gke-db.id
+    push {
+      branch = ".*"
+    }
+  }
+
+  filename = "cloudbuild.yaml"
+}
 locals {
   // ref) default value of google cloud module "secure-ci"
   roles_sa_build = [
