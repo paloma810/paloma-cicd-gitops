@@ -34,14 +34,12 @@ steps:
       pwd
       echo "********** CONTENTS ***********"
       ls -R
-      # if branch name is $env/$BRANCH (is exists as directory)
       if [ -d "environments/$BRANCH_NAME/" ]; then
         cd environments/$BRANCH_NAME
         echo "*************** TERRAFORM INIT ******************"
         echo "******* At environment: ${env} ********"
         echo "*************************************************"
         terraform init
-      # if branch name is fix/$BRANCH (is not exists as directory)
       else
         target=$(echo $BRANCH_NAME | sed -e "s/.*\///g")
         for dir in environments/*/$target/
@@ -71,14 +69,12 @@ steps:
       pwd
       echo "********** CONTENTS ***********"
       ls -R
-      # if branch name is $env/$BRANCH (is exists as directory)
       if [ -d "environments/$BRANCH_NAME/" ]; then
         cd environments/$BRANCH_NAME
         echo "*************** TERRAFOM PLAN ******************"
         echo "******* At environment: ${env} ********"
         echo "*************************************************"
         terraform plan
-      # if branch name is fix/$BRANCH (is not exists as directory)
       else
         target=$(echo $BRANCH_NAME | sed -e "s/.*\///g")
         for dir in environments/*/$target/
