@@ -45,6 +45,16 @@ resource "google_compute_subnetwork" "spoke_vpc_subnet01" {
   private_ip_google_access = true
 }
 
+# 2. Routeの作成
+resource "google_compute_route" "hub_vpc_internet_route" {
+  provider         = google
+  name             = "${var.gcp_project_spoke}-hubvpc01-rt-internet"
+  network          = google_compute_network.hub_vpc.self_link
+  dest_range       = "0.0.0.0/0"
+  next_hop_gateway = "default-internet-gateway"
+  priority         = 1000
+}
+
 #3. Firewall Ruleの作成
 resource "google_compute_firewall" "hub_firewall_ingress_ssh" {
   provider = google
@@ -59,7 +69,7 @@ resource "google_compute_firewall" "hub_firewall_ingress_ssh" {
   allow {
     protocol = "icmp" # ICMPを許可
   }
-  source_ranges = ["10.11.0.0/24", "10.2.0.0/24"] # AWS VPC / Spoke VPCからの通信を許可
+  source_ranges = ["10.11.0.0/24", "10.2.0.0/24", "60.138.39.189/32"] # AWS VPC / Spoke VPCからの通信を許可
   target_tags   = ["local-traffic"]
 }
 
@@ -80,6 +90,27 @@ resource "google_compute_firewall" "spoke_firewall" {
   target_tags   = ["local-traffic"]
 }
 
+# GCEインスタンス用サービスアカウント作成
+resource "google_service_account" "sa_gce" {
+  project      = var.gcp_project_hub
+  account_id   = "${var.gcp_project_hub}-sa-gce"
+  display_name = "GCE Service Account"
+}
+
+# GCE用サービスアカウントにOpsAgent向けの権限を付与
+resource "google_project_iam_member" "iam_policy_for_sa_gce01" {
+  project = var.gcp_project_hub
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.sa_gce.email}"
+}
+
+resource "google_project_iam_member" "iam_policy_for_sa_gce02" {
+  project = var.gcp_project_hub
+  role    = "roles/monitoring.metricWriter"
+  member  = "serviceAccount:${google_service_account.sa_gce.email}"
+}
+
+
 # 4. （オプション）GCEインスタンスの作成
 resource "google_compute_instance" "hub_vpc_instance01" {
   count    = var.is_create_gcp_instance
@@ -88,17 +119,21 @@ resource "google_compute_instance" "hub_vpc_instance01" {
   name         = "${var.gcp_project_hub}-gce-instance01"
   machine_type = "e2-micro"
   boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-10"
-    }
+    auto_delete = false
+    source      = google_compute_disk.hub_vpc_instance01_disk.self_link
+  }
+  metadata = {
+    enable-oslogin : "TRUE",
+    enable-osconfig : "TRUE",
+    serial-port-enable : "TRUE"
   }
   tags = ["local-traffic"]
   network_interface {
     network    = google_compute_network.hub_vpc.self_link
     subnetwork = google_compute_subnetwork.hub_vpc_subnet01.self_link
     # External IPの設定。Private IPのみにする場合、以下は省略する
-    #access_config {
-    #}
+    access_config {
+    }
   }
   scheduling {
     # 料金を抑えるためにプリエンプティブルにしておく
@@ -106,7 +141,73 @@ resource "google_compute_instance" "hub_vpc_instance01" {
     # プリエンプティブルの場合は下のオプションが必須
     automatic_restart = false
   }
+
+  service_account {
+    email  = google_service_account.sa_gce.email
+    scopes = ["cloud-platform"]
+  }
+
+  metadata_startup_script = <<EOF
+#!/bin/bash
+# allocate swap memory due to OOM during dnf update
+sudo fallocate -l 1G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
+
+# dnf update
+sudo dnf update
+
+# install ops agent
+curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+sudo bash add-google-cloud-ops-agent-repo.sh --also-install
+EOF
+
 }
+
+# HUB VPCインスタンス向けのディスクを定義 
+resource "google_compute_disk" "hub_vpc_instance01_disk" {
+  provider = google
+  name     = "${var.gcp_project_hub}-gce-instance01-disk01"
+  //image = "debian-cloud/debian-11"
+  image = "rhel-cloud/rhel-8"
+  size  = 20
+}
+
+# OS Policy
+module "agent_policy" {
+  source     = "terraform-google-modules/cloud-operations/google//modules/agent-policy"
+  version    = "~> 0.2.3"
+  project_id = var.gcp_project_hub
+  policy_id  = "ops-agents-policy"
+  agent_rules = [
+    {
+      type               = "logging"
+      version            = "current-major"
+      package_state      = "installed"
+      enable_autoupgrade = true
+    },
+    {
+      type               = "metrics"
+      version            = "current-major"
+      package_state      = "installed"
+      enable_autoupgrade = true
+    },
+  ]
+  group_labels = [
+    {
+      env = "dev"
+    }
+  ]
+  os_types = [
+    {
+      short_name = "rhel"
+      version    = "8"
+    },
+  ]
+}
+
 
 # Windows RDPテスト用サーバ
 resource "google_compute_instance" "hub_vpc_win_instance01" {
@@ -240,77 +341,3 @@ resource "google_compute_global_forwarding_rule" "forwarding_rule_private_servic
   load_balancing_scheme = ""
 }
 
-#######################
-## GCP AWSとのVPN構成 ##
-#######################
-
-resource "google_compute_ha_vpn_gateway" "hub_vpc_havpn_gw" {
-  count    = var.is_create_vpn_with_aws
-  provider = google
-
-  name    = "${var.gcp_project_hub}-havpn-gw01"
-  network = google_compute_network.hub_vpc.self_link
-}
-
-resource "google_compute_router" "cmk_cloud_router" {
-  count    = var.is_create_vpn_with_aws
-  provider = google
-
-  name    = "${var.gcp_project_hub}-router01"
-  network = google_compute_network.hub_vpc.self_link
-  bgp {
-    asn = 65513
-  }
-}
-
-resource "google_compute_external_vpn_gateway" "hub_vpc_extvpn_gw" {
-  count    = var.is_create_vpn_with_aws
-  provider = google
-
-  name            = "${var.gcp_project_hub}-externalvpn-gw01"
-  redundancy_type = "SINGLE_IP_INTERNALLY_REDUNDANT"
-  description     = "Single IP for AWS VPN"
-
-  interface {
-    id         = 0
-    ip_address = aws_vpn_connection.paloma-dv-vpc01-vpn01[0].tunnel1_address
-  }
-}
-
-// VPNトンネル1の設定
-// VPNトンネルの接続設定(トンネル1用)
-resource "google_compute_vpn_tunnel" "hub_vpc_havpn_tunnel01" {
-  count    = var.is_create_vpn_with_aws
-  provider = google
-
-  name                            = "${var.gcp_project_hub}-havpn-tunnel01"
-  shared_secret                   = aws_vpn_connection.paloma-dv-vpc01-vpn01[0].tunnel1_preshared_key
-  vpn_gateway                     = google_compute_ha_vpn_gateway.hub_vpc_havpn_gw[0].self_link
-  vpn_gateway_interface           = 0
-  peer_external_gateway           = google_compute_external_vpn_gateway.hub_vpc_extvpn_gw[0].self_link
-  peer_external_gateway_interface = 0
-  router                          = google_compute_router.cmk_cloud_router[0].name
-  ike_version                     = 1
-}
-// Cloud Routerインターフェースの設定(トンネル1用)
-resource "google_compute_router_interface" "hub_vpc_router_interface01" {
-  count    = var.is_create_vpn_with_aws
-  provider = google
-
-  name       = "${var.gcp_project_hub}-router01-interface01"
-  router     = google_compute_router.cmk_cloud_router[0].name
-  ip_range   = "${aws_vpn_connection.paloma-dv-vpc01-vpn01[0].tunnel1_cgw_inside_address}/30"
-  vpn_tunnel = google_compute_vpn_tunnel.hub_vpc_havpn_tunnel01[0].name
-}
-
-// BGPピアリング用のBGP情報の設定(トンネル1用)
-resource "google_compute_router_peer" "hub_vpc_router_peer01" {
-  count    = var.is_create_vpn_with_aws
-  provider = google
-
-  name            = "${var.gcp_project_hub}-router01-peer01"
-  router          = google_compute_router.cmk_cloud_router[0].name
-  peer_ip_address = aws_vpn_connection.paloma-dv-vpc01-vpn01[0].tunnel1_vgw_inside_address
-  peer_asn        = aws_vpn_connection.paloma-dv-vpc01-vpn01[0].tunnel1_bgp_asn
-  interface       = google_compute_router_interface.hub_vpc_router_interface01[0].name
-}
