@@ -49,7 +49,7 @@ resource "google_artifact_registry_repository_iam_member" "terraform-image-iam" 
 // Create the GitHub connection
 resource "google_cloudbuildv2_connection" "conn-github" {
   project  = var.cicd_project_id
-  location = "asia-northeast1"
+  location = "us-central1"
   name     = "${var.cicd_project_name}-conn-github"
 
   github_config {
@@ -62,19 +62,84 @@ resource "google_cloudbuildv2_connection" "conn-github" {
 
 resource "google_cloudbuildv2_repository" "repo-github" {
   project           = var.cicd_project_id
-  location          = "asia-northeast1"
+  location          = "us-central1"
   name              = "paloma-cicd-gitops-gke"
   parent_connection = google_cloudbuildv2_connection.conn-github.name
   remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke.git"
 }
 
+resource "google_cloudbuildv2_repository" "repo-github-gke-backend" {
+  project           = var.cicd_project_id
+  location          = "us-central1"
+  name              = "paloma-cicd-gitops-gke-backend"
+  parent_connection = google_cloudbuildv2_connection.conn-github.name
+  remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke-backend.git"
+}
+
+resource "google_cloudbuildv2_repository" "repo-github-gke-frontend" {
+  project           = var.cicd_project_id
+  location          = "us-central1"
+  name              = "paloma-cicd-gitops-gke-frontend"
+  parent_connection = google_cloudbuildv2_connection.conn-github.name
+  remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke-frontend.git"
+}
+
+resource "google_cloudbuildv2_repository" "repo-github-gke-db" {
+  project           = var.cicd_project_id
+  location          = "us-central1"
+  name              = "paloma-cicd-gitops-gke-db"
+  parent_connection = google_cloudbuildv2_connection.conn-github.name
+  remote_uri        = "https://github.com/paloma810/paloma-cicd-gitops-gke-db.git"
+}
+
 # Cloud Build
 resource "google_cloudbuild_trigger" "gke_app_build_trigger" {
   project  = var.cicd_project_id
+  location = "us-central1"
   name     = "${var.cicd_project_name}-trigger-k8s"
-  location = "asia-northeast1"
   repository_event_config {
     repository = google_cloudbuildv2_repository.repo-github.id
+    push {
+      branch = ".*"
+    }
+  }
+
+  filename = "cloudbuild.yaml"
+}
+resource "google_cloudbuild_trigger" "gke_app_build_trigger_gke_backend" {
+  project  = var.cicd_project_id
+  location = "us-central1"
+  name     = "${var.cicd_project_name}-trigger-gke-backend"
+  repository_event_config {
+    repository = google_cloudbuildv2_repository.repo-github-gke-backend.id
+    push {
+      branch = ".*"
+    }
+  }
+
+  filename = "cloudbuild.yaml"
+}
+
+resource "google_cloudbuild_trigger" "gke_app_build_trigger_gke_frontend" {
+  project  = var.cicd_project_id
+  location = "us-central1"
+  name     = "${var.cicd_project_name}-trigger-gke-frontend"
+  repository_event_config {
+    repository = google_cloudbuildv2_repository.repo-github-gke-frontend.id
+    push {
+      branch = ".*"
+    }
+  }
+
+  filename = "cloudbuild.yaml"
+}
+
+resource "google_cloudbuild_trigger" "gke_app_build_trigger_gke_db" {
+  project  = var.cicd_project_id
+  location = "us-central1"
+  name     = "${var.cicd_project_name}-trigger-gke-db"
+  repository_event_config {
+    repository = google_cloudbuildv2_repository.repo-github-gke-db.id
     push {
       branch = ".*"
     }
@@ -107,3 +172,6 @@ resource "google_project_iam_member" "sa_build_project_iam" {
   role     = each.value
   member   = "serviceAccount:181997179469@cloudbuild.gserviceaccount.com"
 }
+
+
+

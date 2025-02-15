@@ -17,16 +17,15 @@ resource "google_compute_subnetwork" "gke_vpc_subnet" {
   network                  = google_compute_network.gke_vpc.self_link
   ip_cidr_range            = var.gke_master_ip_cidr
   private_ip_google_access = true
-  secondary_ip_range = [
-    {
-      range_name    = "${var.project_name}-tnvpc01-subnet01-secipr-pod"
-      ip_cidr_range = var.gke_pods_ip_cidr
-    },
-    {
-      range_name    = "${var.project_name}-tnvpc01-subnet01-secipr-service"
-      ip_cidr_range = var.gke_services_ip_cidr
-    }
-  ]
+  secondary_ip_range {
+    range_name    = "${var.project_name}-tnvpc01-subnet01-secipr-pod"
+    ip_cidr_range = var.gke_pods_ip_cidr
+  }
+  secondary_ip_range {
+    range_name    = "${var.project_name}-tnvpc01-subnet01-secipr-service"
+    ip_cidr_range = var.gke_services_ip_cidr
+  }
+
 }
 
 # Worker Node用のサービスアカウント
@@ -81,6 +80,10 @@ resource "google_container_cluster" "gke_cluster" {
     # コントロールプレーンへのアクセスを許可する IP 範囲
     cidr_blocks {
       cidr_block = google_compute_subnetwork.gke_vpc_subnet.ip_cidr_range # ノードと踏み台が作られるサブネットからのアクセスを許可
+    }
+    cidr_blocks {
+      display_name = "localip"
+      cidr_block   = "60.138.39.189/32"
     }
   }
 }
