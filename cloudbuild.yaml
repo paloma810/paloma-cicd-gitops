@@ -20,10 +20,9 @@ steps:
       pwd
       echo "********** CONTENTS ***********"
       ls -R
-      echo "********** GIT LOG ***********"
-      git fetch --unshallow
-      git log --oneline --graph --decorate
       echo "********** GIT DIFF ***********"
+      # CloudBuildはデフォルトでshallow cloneをするため最新のcommit履歴しかない。fetchで過去の履歴を取得する
+      git fetch --unshallow
       git diff --name-only HEAD^ HEAD
       echo "*******************************"
       _TARGETS_DIR=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq)
@@ -33,6 +32,10 @@ steps:
         release) _ENV="stg" ;;
         main)    _ENV="prod" ;;
       esac
+      echo _TARGETS_DIR
+      echo _ENV
+      git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*"
+      git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g"
 
       for dir in ${_TARGETS_DIR}
       do
