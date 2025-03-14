@@ -23,34 +23,34 @@ steps:
       echo "********** GIT DIFF ***********"
       git diff --name-only HEAD^ HEAD
       echo "*******************************"
-      TARGETS_DIR=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq)
-      ENV=""
+      _TARGETS_DIR=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq)
+      _ENV=""
       case "$BRANCH_NAME" in
-        develop) ENV="dev" ;;
-        release) ENV="stg" ;;
-        main)    ENV="prod" ;;
+        develop) _ENV="dev" ;;
+        release) _ENV="stg" ;;
+        main)    _ENV="prod" ;;
       esac
 
-      for dir in $TARGETS_DIR
+      for dir in ${_TARGETS_DIR}
       do
         if [-d $dir]; then
           cd ${dir}
-          COMPONENTS_VAR_DIR=$(echo $dir | sed -E "s/components/environments\/$ENV/g")
-          CLOUD_VAR_DIR=$(dirname $COMPONENTS_VAR_DIR)
-          ENV_VAR_DIR=$(dirname $CLOUD_VAR_DIR)
-          DEFAULT_VAR_DIR=$(dirname $ENV_VAR_DIR)
-          COMPONENTS=$(basename COMPONENTS_VAR_DIR)
+          _COMPONENTS_VAR_DIR=$(echo $dir | sed -E "s/components/environments\/$_ENV/g")
+          _CLOUD_VAR_DIR=$(dirname $_COMPONENTS_VAR_DIR)
+          _ENV_VAR_DIR=$(dirname $_CLOUD_VAR_DIR)
+          _DEFAULT_VAR_DIR=$(dirname $_ENV_VAR_DIR)
+          _COMPONENTS=$(basename $_COMPONENTS_VAR_DIR)
 
           echo "*************** TERRAFORM INIT ****************************"
-          echo "******* At environment: $ENV, Target: $dir ********"
+          echo "******* At environment: $_ENV, Target: $dir ********"
           echo "***********************************************************"
           terraforn init \
-            --backend-config=prefix=${ENV}/${COMPONENTS} -migrate-state
+            --backend-config=prefix=${_ENV}/${_COMPONENTS} -migrate-state
           terraform plan \
-            -var-file="${DEFAULT_VAR_DIR}/terraform.tfvars" \
-            -var-file="${ENV_VAR_DIR}/terraform.tfvars" \
-            -var-file="${CLOUD_VAR_DIR}/terraform.tfvars" \
-            -var-file="${COMPONENTS_VAR_DIR}/terraform.tfvars"
+            -var-file="${_DEFAULT_VAR_DIR}/terraform.tfvars" \
+            -var-file="${_ENV_VAR_DIR}/terraform.tfvars" \
+            -var-file="${_CLOUD_VAR_DIR}/terraform.tfvars" \
+            -var-file="${_COMPONENTS_VAR_DIR}/terraform.tfvars"
           cd ../../../
         fi
       done
