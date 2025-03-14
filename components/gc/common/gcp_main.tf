@@ -211,7 +211,8 @@ module "agent_policy" {
 
 # Windows RDPテスト用サーバ
 resource "google_compute_instance" "hub_vpc_win_instance01" {
-  count    = var.is_create_gcp_instance
+  #count    = var.is_create_gcp_instance
+  count    = 0
   provider = google
 
   name         = "${var.gcp_project_hub}-gce-win-instance01"
@@ -238,7 +239,8 @@ resource "google_compute_instance" "hub_vpc_win_instance01" {
 }
 
 resource "google_compute_instance" "spoke_vpc_instance01" {
-  count    = var.is_create_gcp_instance
+  #count    = var.is_create_gcp_instance
+  count    = 0
   provider = google.spoke
 
   name         = "${var.gcp_project_spoke}-gce-instance01"
