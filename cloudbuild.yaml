@@ -22,7 +22,7 @@ steps:
       ls -R
       echo "********** GIT DIFF ***********"
       # CloudBuildはデフォルトでshallow cloneをするため最新のcommit履歴しかない。fetchで過去の履歴を取得する
-      git fetch --unshallow
+      git fetch --unshallow > /dev/null
       git diff --name-only HEAD^ HEAD
       echo "*******************************"
       _TARGETS_DIR=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq)
@@ -32,14 +32,13 @@ steps:
         release) _ENV="stg" ;;
         main)    _ENV="prod" ;;
       esac
-      echo _TARGETS_DIR
-      echo _ENV
+      echo $_TARGETS_DIR
+      echo $_ENV
       git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*"
       git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g"
 
       for dir in ${_TARGETS_DIR}
       do
-        if [-d $dir]; then
           cd ${dir}
           _COMPONENTS_VAR_DIR=$(echo $dir | sed -E "s/components/environments\/$_ENV/g")
           _CLOUD_VAR_DIR=$(dirname $_COMPONENTS_VAR_DIR)
@@ -58,7 +57,6 @@ steps:
             -var-file="${_CLOUD_VAR_DIR}/terraform.tfvars" \
             -var-file="${_COMPONENTS_VAR_DIR}/terraform.tfvars"
           cd ../../../
-        fi
       done
   secretEnv: ['TF_VAR_aws_access_key', 'TF_VAR_aws_secret_key']
       
