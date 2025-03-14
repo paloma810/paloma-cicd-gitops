@@ -49,11 +49,14 @@ steps:
           echo "***********************************************************"
           terraform init \
             --backend-config=prefix=${env}/${components} -migrate-state
+          echo "*************** TERRAFORM PLAN ****************************"
+          echo "******* At environment: $env, Target: $dir ********"
+          echo "***********************************************************"
           terraform plan \
-            -var-file="${default_var_dir}/terraform.tfvars" \
-            -var-file="${env_var_dir}/terraform.tfvars" \
-            -var-file="${cloud_var_dir}/terraform.tfvars" \
-            -var-file="${components_var_dir}/terraform.tfvars"
+            -var-file="../../../${default_var_dir}/terraform.tfvars" \
+            -var-file="../../../${env_var_dir}/terraform.tfvars" \
+            -var-file="../../../${cloud_var_dir}/terraform.tfvars" \
+            -var-file="../../../${components_var_dir}/terraform.tfvars"
           cd ../../../
       done
   secretEnv: ['TF_VAR_aws_access_key', 'TF_VAR_aws_secret_key']
