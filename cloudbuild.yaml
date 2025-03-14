@@ -20,6 +20,9 @@ steps:
       pwd
       echo "********** CONTENTS ***********"
       ls -R
+      echo "********** GIT LOG ***********"
+      git fetch --unshallow
+      git log --oneline --graph --decorate
       echo "********** GIT DIFF ***********"
       git diff --name-only HEAD^ HEAD
       echo "*******************************"

@@ -340,4 +340,3 @@ resource "google_compute_global_forwarding_rule" "forwarding_rule_private_servic
   ip_address            = google_compute_global_address.hub_vpc_private_ip_alloc[0].id
   load_balancing_scheme = ""
 }
-
