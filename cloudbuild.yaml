@@ -25,39 +25,39 @@ steps:
       git fetch --unshallow > /dev/null
       git diff --name-only HEAD^ HEAD
       echo "*******************************"
-      _TARGETS_DIR=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq)
-      _ENV=""
+      targets_dir=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq)
+      env=""
       case "$BRANCH_NAME" in
-        develop) _ENV="dev" ;;
-        release) _ENV="stg" ;;
-        main)    _ENV="prod" ;;
+        develop) env="dev" ;;
+        release) env="stg" ;;
+        main)    env="prod" ;;
       esac
-      echo $_TARGETS_DIR
-      echo $_ENV
+      echo $targets_dir
+      echo $env
       git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*"
       git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g"
       git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @
       git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq
 
-      for dir in ${_TARGETS_DIR}
+      for dir in ${targets_dir}
       do
           cd ${dir}
-          _COMPONENTS_VAR_DIR=$(echo $dir | sed -E "s/components/environments\/$_ENV/g")
-          _CLOUD_VAR_DIR=$(dirname $_COMPONENTS_VAR_DIR)
-          _ENV_VAR_DIR=$(dirname $_CLOUD_VAR_DIR)
-          _DEFAULT_VAR_DIR=$(dirname $_ENV_VAR_DIR)
-          _COMPONENTS=$(basename $_COMPONENTS_VAR_DIR)
+          components_var_dir=$(echo $dir | sed -E "s/components/environments\/$env/g")
+          cloud_var_dir=$(dirname $components_var_dir)
+          env_var_dir=$(dirname $cloud_var_dir)
+          default_var_dir=$(dirname $env_var_dir)
+          components=$(basename $components_var_dir)
 
           echo "*************** TERRAFORM INIT ****************************"
-          echo "******* At environment: $_ENV, Target: $dir ********"
+          echo "******* At environment: $env, Target: $dir ********"
           echo "***********************************************************"
           terraforn init \
-            --backend-config=prefix=${_ENV}/${_COMPONENTS} -migrate-state
+            --backend-config=prefix=${env}/${components} -migrate-state
           terraform plan \
-            -var-file="${_DEFAULT_VAR_DIR}/terraform.tfvars" \
-            -var-file="${_ENV_VAR_DIR}/terraform.tfvars" \
-            -var-file="${_CLOUD_VAR_DIR}/terraform.tfvars" \
-            -var-file="${_COMPONENTS_VAR_DIR}/terraform.tfvars"
+            -var-file="${default_var_dir}/terraform.tfvars" \
+            -var-file="${env_var_dir}/terraform.tfvars" \
+            -var-file="${cloud_var_dir}/terraform.tfvars" \
+            -var-file="${components_var_dir}/terraform.tfvars"
           cd ../../../
       done
   secretEnv: ['TF_VAR_aws_access_key', 'TF_VAR_aws_secret_key']
