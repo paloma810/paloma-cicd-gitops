@@ -32,12 +32,8 @@ steps:
         release) env="stg" ;;
         main)    env="prod" ;;
       esac
-      echo $targets_dir
-      echo $env
-      git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*"
-      git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g"
-      git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @
-      git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq
+      echo "targets_dir:" $targets_dir
+      echo "env:" $env
 
       for dir in ${targets_dir}
       do
@@ -51,7 +47,7 @@ steps:
           echo "*************** TERRAFORM INIT ****************************"
           echo "******* At environment: $env, Target: $dir ********"
           echo "***********************************************************"
-          terraforn init \
+          terraform init \
             --backend-config=prefix=${env}/${components} -migrate-state
           terraform plan \
             -var-file="${default_var_dir}/terraform.tfvars" \
