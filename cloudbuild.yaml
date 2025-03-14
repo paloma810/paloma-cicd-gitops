@@ -25,7 +25,9 @@ steps:
       git fetch --unshallow > /dev/null
       git diff --name-only HEAD^ HEAD
       echo "*******************************"
-      targets_dir=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq)
+      # components及びenvironments配下の.tf*ファイルの変更を検知してterraformを実行
+      # なお、environmentsの変更は対応するcomponentsのディレクトリに置き換える（env/cloudレベルの.tfvars変更は無視）
+      targets_dir=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq | grep -E ".*/.*/.*")
       env=""
       case "$BRANCH_NAME" in
         develop) env="dev" ;;
