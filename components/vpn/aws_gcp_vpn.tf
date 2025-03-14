@@ -6,10 +6,19 @@
 # AWS リソース #
 ################
 
+# AWS VPC IDの参照
+data "terraform_remote_state" "aws_common" {
+  backend = "gcs"
+  config = {
+    bucket = "paloma-cicd-tfstate"   # 参照する GCS を指定
+    prefix = "components/aws/common" # 参照する Terraform が指定している prefix
+  }
+}
+
 # 仮想プライベートゲートウェイの設定
 resource "aws_vpn_gateway" "paloma-dv-vpc01-vgw01" {
   count           = var.is_create_vpn
-  vpc_id          = aws_vpc.paloma-dv-vpc01[0].id
+  vpc_id          = data.terraform_remote_state.aws_common.outputs.vpc_id
   amazon_side_asn = 65512
 
   tags = {
@@ -22,7 +31,7 @@ resource "aws_vpn_gateway_route_propagation" "paloma-dv-pub-rt01-vpn-propagation
   count = var.is_create_vpn
 
   vpn_gateway_id = aws_vpn_gateway.paloma-dv-vpc01-vgw01[0].id
-  route_table_id = aws_route_table.paloma-dv-pub-rt01[0].id
+  route_table_id = data.terraform_remote_state.aws_common.outputs.pub_rt01_id
 }
 
 
@@ -31,7 +40,7 @@ resource "aws_vpn_gateway_route_propagation" "paloma-dv-pri-rt01-vpn-propagation
   count = var.is_create_vpn
 
   vpn_gateway_id = aws_vpn_gateway.paloma-dv-vpc01-vgw01[0].id
-  route_table_id = aws_route_table.paloma-dv-pri-rt01[0].id
+  route_table_id = data.terraform_remote_state.aws_common.outputs.pri_rt01_id
 }
 
 # 1つ目のカスタマーゲートウェイの設定
@@ -63,13 +72,23 @@ resource "aws_vpn_connection" "paloma-dv-vpc01-vpn01" {
 ################
 # GCP リソース #
 ################
+
+# GCP VPC IDの参照
+data "terraform_remote_state" "gc_common" {
+  backend = "gcs"
+  config = {
+    bucket = "paloma-cicd-tfstate"  # 参照する GCS を指定
+    prefix = "components/gc/common" # 参照する Terraform が指定している prefix
+  }
+}
+
 # HA VPNの設定
 resource "google_compute_ha_vpn_gateway" "hub_vpc_havpn_gw" {
   count    = var.is_create_vpn
   provider = google
 
   name    = "${var.gcp_project_hub}-havpn-gw01"
-  network = google_compute_network.hub_vpc.self_link
+  network = data.terraform_remote_state.gc_common.outputs.hub_vpc_self_link
 }
 
 # Cloud Routerの設定
@@ -78,7 +97,7 @@ resource "google_compute_router" "cmk_cloud_router" {
   provider = google
 
   name    = "${var.gcp_project_hub}-router01"
-  network = google_compute_network.hub_vpc.self_link
+  network = data.terraform_remote_state.gc_common.outputs.hub_vpc_self_link
   bgp {
     asn = 65513
   }

@@ -2,7 +2,7 @@ terraform {
 
   backend "gcs" {
     bucket = "paloma-cicd-tfstate"
-    prefix = "env/dev/psc"
+    prefix = "components/gc/common"
   }
   /*  
   backend "local" {

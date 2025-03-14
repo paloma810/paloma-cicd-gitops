@@ -1,3 +1,8 @@
+##########
+# 1. NW  #
+##########
+
+# 1-1. VPCの作成
 resource "aws_vpc" "paloma-dv-vpc01" {
   count      = var.is_create_aws_resources
   cidr_block = "10.11.0.0/24"
@@ -9,7 +14,7 @@ resource "aws_vpc" "paloma-dv-vpc01" {
   }
 }
 
-# パブリックサブネットの作成
+# 1-1. パブリックサブネットの作成
 resource "aws_subnet" "paloma-dv-vpc01-pub-subnet01" {
   count    = var.is_create_aws_resources
   provider = aws
@@ -22,7 +27,7 @@ resource "aws_subnet" "paloma-dv-vpc01-pub-subnet01" {
   }
 }
 
-# プライベートサブネットの作成
+# 1-2. プライベートサブネットの作成
 resource "aws_subnet" "paloma-dv-vpc01-pri-subnet01" {
   count    = var.is_create_aws_resources
   provider = aws
@@ -35,7 +40,7 @@ resource "aws_subnet" "paloma-dv-vpc01-pri-subnet01" {
   }
 }
 
-# IGWの作成
+# 1-3. IGWの作成
 resource "aws_internet_gateway" "paloma-dv-vpc01-igw01" {
   count  = var.is_create_aws_resources
   vpc_id = aws_vpc.paloma-dv-vpc01[0].id
@@ -45,7 +50,7 @@ resource "aws_internet_gateway" "paloma-dv-vpc01-igw01" {
   }
 }
 
-# Pubルートテーブルの作成
+# 1-4. Pubルートテーブルの作成
 resource "aws_route_table" "paloma-dv-pub-rt01" {
   count  = var.is_create_aws_resources
   vpc_id = aws_vpc.paloma-dv-vpc01[0].id
@@ -57,27 +62,44 @@ resource "aws_route_table" "paloma-dv-pub-rt01" {
   }
 }
 
-# パブリックサブネットのルートテーブルの関連付け
+# 1-5. パブリックサブネットのルートテーブルの関連付け
 resource "aws_route_table_association" "paloma-dv-pub_subnet01_association" {
   count          = var.is_create_aws_resources
   subnet_id      = aws_subnet.paloma-dv-vpc01-pub-subnet01[0].id
   route_table_id = aws_route_table.paloma-dv-pub-rt01[0].id
 }
 
-# Priルートテーブルの作成
+# 1-6. Priルートテーブルの作成
 resource "aws_route_table" "paloma-dv-pri-rt01" {
   count  = var.is_create_aws_resources
   vpc_id = aws_vpc.paloma-dv-vpc01[0].id
 }
 
-# プライベートサブネットのルートテーブルの関連付け
+# 1-7. プライベートサブネットのルートテーブルの関連付け
 resource "aws_route_table_association" "paloma-dv-pri_subnet01_association" {
   count          = var.is_create_aws_resources
   subnet_id      = aws_subnet.paloma-dv-vpc01-pri-subnet01[0].id
   route_table_id = aws_route_table.paloma-dv-pri-rt01[0].id
 }
 
-# SSM接続用IAMロール
+# 1-8. VPC Endpont
+module "paloma-dv-vpc-endpoint-ssm" {
+  count = var.is_create_aws_resources
+
+  source = "../../../modules/aws_ssm_vpce"
+
+  vpc_id               = aws_vpc.paloma-dv-vpc01[0].id
+  subnet_id            = aws_subnet.paloma-dv-vpc01-pri-subnet01[0].id
+  security_group_id    = aws_security_group.paloma-dv-vpce-sg01[0].id
+  resource_name_prefix = var.aws_resname_prefix
+
+}
+
+##################
+# 2. EC2 (+IAM)  #
+##################
+
+# 2-1. SSM接続用IAMロール
 resource "aws_iam_role" "paloma-dv-iam-role-ssm" {
   count              = var.is_create_aws_resources > 0 ? var.is_create_aws_instance > 0 ? 1 : 0 : 0
   name               = "${var.aws_resname_prefix}-iam-role-ssm"
@@ -103,12 +125,14 @@ EOF
   }
 }
 
+# 2-1. IAMポリシーのアタッチ
 resource "aws_iam_role_policy_attachment" "paloma-dv-iam-role-ssm" {
   count      = var.is_create_aws_resources > 0 ? var.is_create_aws_instance > 0 ? 1 : 0 : 0
   role       = aws_iam_role.paloma-dv-iam-role-ssm[0].name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+# 2-1. EC2インスタンスプロファイルの作成
 resource "aws_iam_instance_profile" "paloma-dv-instance-profile01" {
   count = var.is_create_aws_resources > 0 ? var.is_create_aws_instance > 0 ? 1 : 0 : 0
 
@@ -116,7 +140,7 @@ resource "aws_iam_instance_profile" "paloma-dv-instance-profile01" {
   role = aws_iam_role.paloma-dv-iam-role-ssm[0].name
 }
 
-# EC2インスタンス（パブリックサブネット）
+# 2-2. EC2インスタンス（パブリックサブネット）
 resource "aws_instance" "paloma-dv-pub-instance01" {
   count = var.is_create_aws_resources > 0 ? var.is_create_aws_instance > 0 ? var.is_create_aws_instance : 0 : 0
 
@@ -141,7 +165,7 @@ resource "aws_instance" "paloma-dv-pub-instance01" {
   }
 }
 
-# EC2インスタンス（プライベートサブネット Linux）
+# 2-3. EC2インスタンス（プライベートサブネット Linux）
 resource "aws_instance" "paloma-dv-pri-linux-instance01" {
   count = var.is_create_aws_resources > 0 ? var.is_create_aws_instance > 0 ? var.is_create_aws_instance : 0 : 0
 
@@ -166,7 +190,7 @@ resource "aws_instance" "paloma-dv-pri-linux-instance01" {
   }
 }
 
-# EC2インスタンス（プライベートサブネット Windows）
+# 2-4. EC2インスタンス（プライベートサブネット Windows）
 resource "aws_instance" "paloma-dv-pri-win-instance01" {
   count = var.is_create_aws_resources > 0 ? var.is_create_aws_instance > 0 ? var.is_create_aws_instance : 0 : 0
 
@@ -192,7 +216,7 @@ resource "aws_instance" "paloma-dv-pri-win-instance01" {
 }
 
 
-# パブリックサブネットのEC2用セキュリティグループ
+# 2-5. パブリックサブネットのEC2用セキュリティグループ
 resource "aws_security_group" "paloma-dv-pub-sg01" {
   count       = var.is_create_aws_resources
   name        = "paloma-dv-pub-sg01"
@@ -218,7 +242,7 @@ resource "aws_security_group" "paloma-dv-pub-sg01" {
   }
 }
 
-# プライベートサブネットのEC2用セキュリティグループ
+# 2-6. プライベートサブネットのEC2用セキュリティグループ
 resource "aws_security_group" "paloma-dv-pri-sg01" {
   count       = var.is_create_aws_resources
   name        = "paloma-dv-pri-sg01"
@@ -271,7 +295,7 @@ resource "aws_security_group_rule" "paloma-dv-pri-sg01-rule-egress-gcp" {
 
 }
 
-# SSM用VPC Endpoint用セキュリティグループ
+# 2-7. SSM用VPC Endpoint用セキュリティグループ
 resource "aws_security_group" "paloma-dv-vpce-sg01" {
   count = var.is_create_aws_resources
 
@@ -316,16 +340,3 @@ resource "aws_vpc_endpoint" "paloma-dv-vpc-endpoint-ssm" {
   }
 }
 */
-
-module "paloma-dv-vpc-endpoint-ssm" {
-  count = var.is_create_aws_resources
-
-  source = "../../../modules/aws_ssm_vpce"
-
-  vpc_id               = aws_vpc.paloma-dv-vpc01[0].id
-  subnet_id            = aws_subnet.paloma-dv-vpc01-pri-subnet01[0].id
-  security_group_id    = aws_security_group.paloma-dv-vpce-sg01[0].id
-  resource_name_prefix = var.aws_resname_prefix
-
-}
-
