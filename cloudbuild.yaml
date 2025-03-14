@@ -36,6 +36,8 @@ steps:
       echo $_ENV
       git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*"
       git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g"
+      git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @
+      git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq
 
       for dir in ${_TARGETS_DIR}
       do
