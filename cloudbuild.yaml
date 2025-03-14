@@ -21,9 +21,9 @@ steps:
       echo "********** CONTENTS ***********"
       ls -R
       echo "********** GIT DIFF ***********"
-      git diff --name-only HEAD^ HEAD
+      git diff --name-only HEAD
       echo "*******************************"
-      _TARGETS_DIR=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq)
+      _TARGETS_DIR=$(git diff --name-only HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq)
       _ENV=""
       case "$BRANCH_NAME" in
         develop) _ENV="dev" ;;
