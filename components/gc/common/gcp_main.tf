@@ -159,6 +159,12 @@ echo '/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
 # dnf update
 sudo dnf update
 
+# install utilities
+sudo dnf install wget
+
+# install performance-tools
+sudo dnf install sysstat systemtap perf strace iotop blktrace tcpdump traceroute
+
 # install ops agent
 curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
 sudo bash add-google-cloud-ops-agent-repo.sh --also-install

@@ -45,12 +45,13 @@ steps:
           env_var_dir=$(dirname $cloud_var_dir)
           default_var_dir=$(dirname $env_var_dir)
           components=$(basename $components_var_dir)
+          cloud=$(basename $(dirname $components_var_dir))
 
           echo "*************** TERRAFORM INIT ****************************"
           echo "******* At environment: $env, Target: $dir ********"
           echo "***********************************************************"
           terraform init \
-            --backend-config=prefix=${env}/${components} -migrate-state
+            --backend-config=prefix=${env}/${cloud}/${components} -migrate-state
           echo "*************** TERRAFORM PLAN ****************************"
           echo "******* At environment: $env, Target: $dir ********"
           echo "***********************************************************"
