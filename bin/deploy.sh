@@ -71,8 +71,8 @@ if [ "$#" -ne "${EXPECTED_ARGS}" ]; then
 fi
 
 # 環境変数
-export TF_VAR_aws_access_key="dd"
-export TF_VAR_aws_secret_key="dd"
+export TF_VAR_aws_access_key="dddd"
+export TF_VAR_aws_secret_key="dddd"
 export ENV=${1}
 export CLOUD=${2}
 export COMPONENTS=${3}
