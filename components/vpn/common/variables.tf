@@ -37,9 +37,9 @@ variable "aws_resname_prefix" {
 }
 variable "remotestate_gc_prefix" {
   type    = string
-  default = "dev/components/gc/common"
+  default = "dev/gc/common"
 }
 variable "remotestate_aws_prefix" {
   type    = string
-  default = "dev/components/aws/common"
+  default = "dev/aws/common"
 }
