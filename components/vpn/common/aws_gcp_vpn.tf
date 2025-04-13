@@ -10,8 +10,8 @@
 data "terraform_remote_state" "aws_common" {
   backend = "gcs"
   config = {
-    bucket = "paloma-cicd-tfstate"   # 参照する GCS を指定
-    prefix = "components/aws/common" # 参照する Terraform が指定している prefix
+    bucket = "paloma-cicd-tfstate"      # 参照する GCS を指定
+    prefix = var.remotestate_aws_prefix # 参照する Terraform が指定している prefix
   }
 }
 
@@ -77,8 +77,8 @@ resource "aws_vpn_connection" "paloma-dv-vpc01-vpn01" {
 data "terraform_remote_state" "gc_common" {
   backend = "gcs"
   config = {
-    bucket = "paloma-cicd-tfstate"  # 参照する GCS を指定
-    prefix = "components/gc/common" # 参照する Terraform が指定している prefix
+    bucket = "paloma-cicd-tfstate"     # 参照する GCS を指定
+    prefix = var.remotestate_gc_prefix # 参照する Terraform が指定している prefix
   }
 }
 

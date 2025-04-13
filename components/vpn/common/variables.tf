@@ -35,3 +35,11 @@ variable "aws_resname_prefix" {
   type    = string
   default = "paloma-dv-"
 }
+variable "remotestate_gc_prefix" {
+  type    = string
+  default = "dev/components/gc/common"
+}
+variable "remotestate_aws_prefix" {
+  type    = string
+  default = "dev/components/aws/common"
+}

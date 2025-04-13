@@ -22,4 +22,3 @@ variable "cicd_project_name" {
   type    = string
   default = "kh-paloma-m01-01"
 }
-
