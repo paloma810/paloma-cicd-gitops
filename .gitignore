@@ -1,7 +1,0 @@
-.terraform*
-*.tfstate*
-*.tfplan
-*.terraform.lock.hcl
-credential.auto.tfvars
-/bin/*
-/bin/
