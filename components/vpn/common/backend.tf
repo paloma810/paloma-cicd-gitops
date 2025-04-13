@@ -2,7 +2,7 @@ terraform {
 
   backend "gcs" {
     bucket = "paloma-cicd-tfstate"
-    prefix = "components/vpn"
+    prefix = "components/vpn/common"
   }
   /*  
   backend "local" {
