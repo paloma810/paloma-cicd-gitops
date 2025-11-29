@@ -60,12 +60,9 @@ steps:
         # Extract target directories from changed files
         echo "===== Target Detection ====="
         TARGETS_DIR=$(git diff --name-only HEAD^ HEAD | \
-          grep -E "^(environments|components).*\.tf.*" || true | \
-          sed -E "s|environments/(dev|prod|stg)|components|g" | \
-          xargs -I@ dirname @ 2>/dev/null | \
-          uniq | \
-          grep -E ".*/.*/.*" || true)
-
+          grep -E "^(environments|components).*\.tf.*" | \
+          sed -E "s/environments\/(dev|prod|stg)/components/g" | \
+          xargs -I@ dirname @ | uniq | grep -E ".*/.*/.*")
         if [ -z "$${TARGETS_DIR}" ]; then
           echo "No Terraform files changed. Skipping plan."
           exit 0
