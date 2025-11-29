@@ -76,7 +76,7 @@ steps:
         echo ""
 
         # Process each target directory
-        while IFS= read -r dir; do
+        echo "$${TARGETS_DIR}" | while IFS= read -r dir; do
           [ -z "$${dir}" ] && continue
 
           echo "===== Processing: $${dir} ====="
@@ -114,7 +114,7 @@ steps:
           echo ""
 
           cd ../../../
-        done <<< "$${TARGETS_DIR}"
+        done
 
         echo "===== Terraform Plan Complete ====="
 
