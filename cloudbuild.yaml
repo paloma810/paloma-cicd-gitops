@@ -1,9 +1,3 @@
-# Define environment mapping
-substitutions:
-  _ENV_DEVELOP: 'dev'
-  _ENV_RELEASE: 'stg'
-  _ENV_MAIN: 'prod'
-
 steps:
   # Step 1: Display current Git branch
   - id: 'display-branch'
@@ -44,13 +38,13 @@ steps:
         echo "===== Environment Detection ====="
         case "${BRANCH_NAME}" in
           develop)
-            ENV="${_ENV_DEVELOP}"
+            ENV="dev"
             ;;
           release)
-            ENV="${_ENV_RELEASE}"
+            ENV="stg"
             ;;
           main)
-            ENV="${_ENV_MAIN}"
+            ENV="prod"
             ;;
           *)
             echo "Warning: Unknown branch '${BRANCH_NAME}'. Defaulting to dev."
