@@ -36,6 +36,7 @@ steps:
 
         # Determine target environment based on branch
         echo "===== Environment Detection ====="
+        # BRANCH_NAME は Cloud Build の変数なので $ のまま
         case "${BRANCH_NAME}" in
           develop)
             ENV="dev"
@@ -51,7 +52,9 @@ steps:
             ENV="dev"
             ;;
         esac
-        echo "Detected environment: ${ENV}"
+        
+        # シェル変数は $$ でエスケープして参照する
+        echo "Detected environment: $${ENV}"
         echo ""
 
         # Extract target directories from changed files
@@ -63,55 +66,55 @@ steps:
           uniq | \
           grep -E ".*/.*/.*" || true)
 
-        if [ -z "${TARGETS_DIR}" ]; then
+        if [ -z "$${TARGETS_DIR}" ]; then
           echo "No Terraform files changed. Skipping plan."
           exit 0
         fi
 
         echo "Targets to process:"
-        echo "${TARGETS_DIR}"
+        echo "$${TARGETS_DIR}"
         echo ""
 
         # Process each target directory
         while IFS= read -r dir; do
-          [ -z "${dir}" ] && continue
+          [ -z "$${dir}" ] && continue
 
-          echo "===== Processing: ${dir} ====="
-          cd "${dir}"
+          echo "===== Processing: $${dir} ====="
+          cd "$${dir}"
 
           # Calculate variable file paths
-          COMPONENTS_VAR_DIR=$(echo "${dir}" | sed -E "s|components|environments/${ENV}|g")
-          CLOUD_VAR_DIR=$(dirname "${COMPONENTS_VAR_DIR}")
-          ENV_VAR_DIR=$(dirname "${CLOUD_VAR_DIR}")
-          DEFAULT_VAR_DIR=$(dirname "${ENV_VAR_DIR}")
-          COMPONENTS=$(basename "${COMPONENTS_VAR_DIR}")
-          CLOUD=$(basename "$(dirname "${COMPONENTS_VAR_DIR}")")
+          COMPONENTS_VAR_DIR=$(echo "$${dir}" | sed -E "s|components|environments/$${ENV}|g")
+          CLOUD_VAR_DIR=$(dirname "$${COMPONENTS_VAR_DIR}")
+          ENV_VAR_DIR=$(dirname "$${CLOUD_VAR_DIR}")
+          DEFAULT_VAR_DIR=$(dirname "$${ENV_VAR_DIR}")
+          COMPONENTS=$(basename "$${COMPONENTS_VAR_DIR}")
+          CLOUD=$(basename "$(dirname "$${COMPONENTS_VAR_DIR}")")
 
           echo "Configuration paths:"
-          echo "  Default: ${DEFAULT_VAR_DIR}/terraform.tfvars"
-          echo "  Environment: ${ENV_VAR_DIR}/terraform.tfvars"
-          echo "  Cloud: ${CLOUD_VAR_DIR}/terraform.tfvars"
-          echo "  Component: ${COMPONENTS_VAR_DIR}/terraform.tfvars"
+          echo "  Default: $${DEFAULT_VAR_DIR}/terraform.tfvars"
+          echo "  Environment: $${ENV_VAR_DIR}/terraform.tfvars"
+          echo "  Cloud: $${CLOUD_VAR_DIR}/terraform.tfvars"
+          echo "  Component: $${COMPONENTS_VAR_DIR}/terraform.tfvars"
           echo ""
 
           # Initialize Terraform
-          echo "===== Terraform Init: ${ENV}/${CLOUD}/${COMPONENTS} ====="
+          echo "===== Terraform Init: $${ENV}/$${CLOUD}/$${COMPONENTS} ====="
           terraform init \
-            --backend-config="prefix=${ENV}/${CLOUD}/${COMPONENTS}" \
+            --backend-config="prefix=$${ENV}/$${CLOUD}/$${COMPONENTS}" \
             -migrate-state
           echo ""
 
           # Plan Terraform changes
-          echo "===== Terraform Plan: ${ENV}/${CLOUD}/${COMPONENTS} ====="
+          echo "===== Terraform Plan: $${ENV}/$${CLOUD}/$${COMPONENTS} ====="
           terraform plan \
-            -var-file="../../../${DEFAULT_VAR_DIR}/terraform.tfvars" \
-            -var-file="../../../${ENV_VAR_DIR}/terraform.tfvars" \
-            -var-file="../../../${CLOUD_VAR_DIR}/terraform.tfvars" \
-            -var-file="../../../${COMPONENTS_VAR_DIR}/terraform.tfvars"
+            -var-file="../../../$${DEFAULT_VAR_DIR}/terraform.tfvars" \
+            -var-file="../../../$${ENV_VAR_DIR}/terraform.tfvars" \
+            -var-file="../../../$${CLOUD_VAR_DIR}/terraform.tfvars" \
+            -var-file="../../../$${COMPONENTS_VAR_DIR}/terraform.tfvars"
           echo ""
 
           cd ../../../
-        done <<< "${TARGETS_DIR}"
+        done <<< "$${TARGETS_DIR}"
 
         echo "===== Terraform Plan Complete ====="
 
