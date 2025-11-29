@@ -1,72 +1,129 @@
+# Define environment mapping
+substitutions:
+  _ENV_DEVELOP: 'dev'
+  _ENV_RELEASE: 'stg'
+  _ENV_MAIN: 'prod'
+
 steps:
-- id: 'branch name'
-  name: 'alpine'
-  entrypoint: 'sh'  
-  args: 
-  - '-c'
-  - | 
-      echo "***********************"
-      echo "$BRANCH_NAME"
-      echo "***********************"
+  # Step 1: Display current Git branch
+  - id: 'display-branch'
+    name: 'alpine'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        echo "===== Git Branch ====="
+        echo "${BRANCH_NAME}"
+        echo "======================"
 
-# [START tf-init-and-plan]
-- id: 'tf init and plan'
-  name: 'hashicorp/terraform:latest'
-  entrypoint: 'sh'
-  args: 
-  - '-c'
-  - |
-      echo "********** DIRECTORY **********"
-      pwd
-      echo "********** CONTENTS ***********"
-      ls -R
-      echo "********** GIT DIFF ***********"
-      # CloudBuildはデフォルトでshallow cloneをするため最新のcommit履歴しかない。fetchで過去の履歴を取得する
-      git fetch --unshallow > /dev/null
-      git diff --name-only HEAD^ HEAD
-      echo "*******************************"
-      # components及びenvironments配下の.tf*ファイルの変更を検知してterraformを実行
-      # なお、environmentsの変更は対応するcomponentsのディレクトリに置き換える（env/cloudレベルの.tfvars変更は無視）
-      targets_dir=$(git diff --name-only HEAD^ HEAD | grep -E "^(environments|components).*\.tf.*" | sed -E "s/environments\/(dev|prod|stg)/components/g" | xargs -I@ dirname @ | uniq | grep -E ".*/.*/.*")
-      env=""
-      case "$BRANCH_NAME" in
-        develop) env="dev" ;;
-        release) env="stg" ;;
-        main)    env="prod" ;;
-      esac
-      echo "targets_dir:" $targets_dir
-      echo "env:" $env
+  # Step 2: Initialize Terraform and plan changes
+  - id: 'tf-init-and-plan'
+    name: 'hashicorp/terraform:latest'
+    entrypoint: 'sh'
+    secretEnv: ['TF_VAR_aws_access_key', 'TF_VAR_aws_secret_key']
+    args:
+      - '-c'
+      - |
+        set -e  # Exit on error
 
-      for dir in ${targets_dir}
-      do
-          cd ${dir}
-          components_var_dir=$(echo $dir | sed -E "s/components/environments\/$env/g")
-          cloud_var_dir=$(dirname $components_var_dir)
-          env_var_dir=$(dirname $cloud_var_dir)
-          default_var_dir=$(dirname $env_var_dir)
-          components=$(basename $components_var_dir)
-          cloud=$(basename $(dirname $components_var_dir))
+        # Display environment information
+        echo "===== Workspace Information ====="
+        echo "Current directory: $(pwd)"
+        echo "Directory structure:"
+        ls -R
+        echo ""
 
-          echo "*************** TERRAFORM INIT ****************************"
-          echo "******* At environment: $env, Target: $dir ********"
-          echo "***********************************************************"
+        # Fetch full Git history (CloudBuild uses shallow clone by default)
+        echo "===== Git History ====="
+        git fetch --unshallow > /dev/null 2>&1 || true
+        echo "Changed files:"
+        git diff --name-only HEAD^ HEAD
+        echo ""
+
+        # Determine target environment based on branch
+        echo "===== Environment Detection ====="
+        case "${BRANCH_NAME}" in
+          develop)
+            ENV="${_ENV_DEVELOP}"
+            ;;
+          release)
+            ENV="${_ENV_RELEASE}"
+            ;;
+          main)
+            ENV="${_ENV_MAIN}"
+            ;;
+          *)
+            echo "Warning: Unknown branch '${BRANCH_NAME}'. Defaulting to dev."
+            ENV="dev"
+            ;;
+        esac
+        echo "Detected environment: ${ENV}"
+        echo ""
+
+        # Extract target directories from changed files
+        echo "===== Target Detection ====="
+        TARGETS_DIR=$(git diff --name-only HEAD^ HEAD | \
+          grep -E "^(environments|components).*\.tf.*" || true | \
+          sed -E "s|environments/(dev|prod|stg)|components|g" | \
+          xargs -I@ dirname @ 2>/dev/null | \
+          uniq | \
+          grep -E ".*/.*/.*" || true)
+
+        if [ -z "${TARGETS_DIR}" ]; then
+          echo "No Terraform files changed. Skipping plan."
+          exit 0
+        fi
+
+        echo "Targets to process:"
+        echo "${TARGETS_DIR}"
+        echo ""
+
+        # Process each target directory
+        while IFS= read -r dir; do
+          [ -z "${dir}" ] && continue
+
+          echo "===== Processing: ${dir} ====="
+          cd "${dir}"
+
+          # Calculate variable file paths
+          COMPONENTS_VAR_DIR=$(echo "${dir}" | sed -E "s|components|environments/${ENV}|g")
+          CLOUD_VAR_DIR=$(dirname "${COMPONENTS_VAR_DIR}")
+          ENV_VAR_DIR=$(dirname "${CLOUD_VAR_DIR}")
+          DEFAULT_VAR_DIR=$(dirname "${ENV_VAR_DIR}")
+          COMPONENTS=$(basename "${COMPONENTS_VAR_DIR}")
+          CLOUD=$(basename "$(dirname "${COMPONENTS_VAR_DIR}")")
+
+          echo "Configuration paths:"
+          echo "  Default: ${DEFAULT_VAR_DIR}/terraform.tfvars"
+          echo "  Environment: ${ENV_VAR_DIR}/terraform.tfvars"
+          echo "  Cloud: ${CLOUD_VAR_DIR}/terraform.tfvars"
+          echo "  Component: ${COMPONENTS_VAR_DIR}/terraform.tfvars"
+          echo ""
+
+          # Initialize Terraform
+          echo "===== Terraform Init: ${ENV}/${CLOUD}/${COMPONENTS} ====="
           terraform init \
-            --backend-config=prefix=${env}/${cloud}/${components} -migrate-state
-          echo "*************** TERRAFORM PLAN ****************************"
-          echo "******* At environment: $env, Target: $dir ********"
-          echo "***********************************************************"
+            --backend-config="prefix=${ENV}/${CLOUD}/${COMPONENTS}" \
+            -migrate-state
+          echo ""
+
+          # Plan Terraform changes
+          echo "===== Terraform Plan: ${ENV}/${CLOUD}/${COMPONENTS} ====="
           terraform plan \
-            -var-file="../../../${default_var_dir}/terraform.tfvars" \
-            -var-file="../../../${env_var_dir}/terraform.tfvars" \
-            -var-file="../../../${cloud_var_dir}/terraform.tfvars" \
-            -var-file="../../../${components_var_dir}/terraform.tfvars"
+            -var-file="../../../${DEFAULT_VAR_DIR}/terraform.tfvars" \
+            -var-file="../../../${ENV_VAR_DIR}/terraform.tfvars" \
+            -var-file="../../../${CLOUD_VAR_DIR}/terraform.tfvars" \
+            -var-file="../../../${COMPONENTS_VAR_DIR}/terraform.tfvars"
+          echo ""
+
           cd ../../../
-      done
-  secretEnv: ['TF_VAR_aws_access_key', 'TF_VAR_aws_secret_key']
-      
+        done <<< "${TARGETS_DIR}"
+
+        echo "===== Terraform Plan Complete ====="
+
 availableSecrets:
   secretManager:
-  - versionName: projects/181997179469/secrets/paloma-cicd-secret-aws-access-key/versions/latest
-    env: 'TF_VAR_aws_access_key'
-  - versionName: projects/181997179469/secrets/paloma-cicd-secret-aws-secret-key/versions/latest
-    env: 'TF_VAR_aws_secret_key'
+    - versionName: projects/181997179469/secrets/paloma-cicd-secret-aws-access-key/versions/latest
+      env: 'TF_VAR_aws_access_key'
+    - versionName: projects/181997179469/secrets/paloma-cicd-secret-aws-secret-key/versions/latest
+      env: 'TF_VAR_aws_secret_key'
