@@ -49,6 +49,11 @@ resource "google_container_cluster" "gke_cluster" {
   remove_default_node_pool  = true
   initial_node_count        = 1 #これ必要ある？
   default_max_pods_per_node = 100
+
+  # ログとモニタリングを無効化することでシステム管理Podを減らす。
+  # Fluentbit や Metrics Agent などの重いPodが消えるが、Logging/MonitoringはGKE標準機能が使えなくなる
+  logging_service    = "none"
+  monitoring_service = "none"
   addons_config {
     horizontal_pod_autoscaling {
       disabled = true
