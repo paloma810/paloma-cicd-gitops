@@ -101,7 +101,7 @@ resource "google_container_node_pool" "gke_node_pool01" {
 
   node_config {
     preemptible  = true
-    machine_type = "e2-small"
+    machine_type = "e2-medium"
     disk_size_gb = 20
 
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
@@ -127,7 +127,7 @@ resource "google_container_node_pool" "gke_node_pool02" {
 
   node_config {
     preemptible  = true
-    machine_type = "e2-small"
+    machine_type = "e2-medium"
     disk_size_gb = 20
 
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
